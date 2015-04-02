@@ -1,3 +1,28 @@
 {
-    listen_addr: ":3253"   
+    listen_addr: ":3253"  
+	
+	mysql: {
+		conn_timeout: "5s"
+		connections: 3
+		max_stmt_cache: 20000
+		
+		//breaker
+		failure_allowance: 5
+		retry_interval: "10s"
+		
+		//pool
+		max_idle_conns: 10
+		max_open_conns: 15
+		
+		servers: [
+			{
+				pool: "test"
+				host: "127.0.0.1"
+				port: "3306"
+				user: "root"
+				pass: ""
+				shard_id: 1
+			}
+		]
+	}
 }

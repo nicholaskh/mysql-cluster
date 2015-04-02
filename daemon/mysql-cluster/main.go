@@ -21,6 +21,8 @@ func main() {
 
 	config.LoadConfig(s.Conf)
 
+	server.SetupLogging(options.logFile, options.logLevel, options.crashLogFile)
+
 	connpool.LaunchServer()
 
 	var ch chan int = make(chan int)
