@@ -28,10 +28,13 @@ func (this *Client) Dial(addr string) error {
 	return this.connect()
 }
 
-func (this *Client) Query(pool, sql string) (result string, err error) {
-	q := NewQuery()
+func (this *Client) Query(pool, sql string, args []string) (result string, err error) {
+	q := NewQueryStruct()
 	q.Setpool(pool)
 	q.Setsql(sql)
+	for _, arg := range args {
+		q.Addargs(arg)
+	}
 
 	buf := make([]byte, 1000)
 	q.Serialize(buf)

@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/nicholaskh/golib/server"
 	"github.com/nicholaskh/mysql-cluster/config"
-	"github.com/nicholaskh/mysql-cluster/connpool"
+	. "github.com/nicholaskh/mysql-cluster/proxygate"
 )
 
 func init() {
@@ -21,9 +21,11 @@ func main() {
 
 	config.LoadConfig(s.Conf)
 
+	InitGlobal()
+
 	server.SetupLogging(options.logFile, options.logLevel, options.crashLogFile)
 
-	connpool.LaunchServer()
+	LaunchServer()
 
 	var ch chan int = make(chan int)
 	<-ch

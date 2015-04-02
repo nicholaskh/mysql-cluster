@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/nicholaskh/mysql-cluster/config"
+	"github.com/nicholaskh/mysql-cluster/proto/go"
 )
 
 type ProxyGate struct {
@@ -18,12 +19,34 @@ func NewProxyGate() *ProxyGate {
 		for shardId, mysqlInstanceConfig := range mysqlMap {
 			mysql := newMysql(mysqlInstanceConfig.DSN(), config.Config.Mysql.MaxStmtCache,
 				config.Config.Mysql.MaxIdleConns, config.Config.Mysql.MaxOpenConns)
-			this.pools[fmt.Sprintf("%s%d", pool, shardId)] = mysql
+			if shardId != 0 {
+				this.pools[fmt.Sprintf("%s%d", pool, shardId)] = mysql
+			} else {
+				this.pools[pool] = mysql
+			}
+			mysql.Open()
 		}
 	}
 	return this
 }
 
-func (this *ProxyGate) Execute(sql string, params ...interface{}) {
+func (this *ProxyGate) Execute(q *proto.QueryStruct) (res string, err error) {
+	pool := q.Getpool()
+	sql := q.Getsql()
+	args := q.Getallargs()
+	argsI := make([]interface{}, len(args))
 
+	for i, arg := range args {
+		argsI[i] = arg
+	}
+
+	rows, err := this.pools[pool].Query(sql, argsI...)
+	defer rows.Close()
+	for rows.Next() {
+		var id string
+		var name string
+		rows.Scan(&id, &name)
+		res += fmt.Sprintf("%s %s\n", id, name)
+	}
+	return
 }

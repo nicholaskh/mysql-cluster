@@ -11,7 +11,7 @@ import (
 )
 
 func LaunchServer() {
-	s := server.NewTcpServer("connpool")
+	s := server.NewTcpServer("myc")
 
 	s.LaunchTcpServer(Config.ListenAddr, newClientHandler(), time.Minute*2, 200)
 }
@@ -29,13 +29,18 @@ func (this *ClientHandler) OnAccept(cli *server.Client) {
 }
 
 func (this *ClientHandler) OnRead(input string) {
-	q := proto.NewQuery()
+	q := proto.NewQueryStruct()
 	err := q.Parse([]byte(input), len(input))
 	if err != nil {
 		log.Error("parse query error")
 	}
 	log.Info("sql: %s\npool: %s", q.Getsql(), q.Getpool())
-	this.client.WriteMsg(fmt.Sprintf("received sql: %s\nreceived pool: %s\n", q.Getsql(), q.Getpool()))
+	rows, err := proxyGate.Execute(q)
+	if err != nil {
+		log.Error(err.Error())
+	} else {
+		this.client.WriteMsg(fmt.Sprintf("%s\n", rows))
+	}
 }
 
 func (this *ClientHandler) OnClose() {

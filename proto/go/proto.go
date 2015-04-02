@@ -1,6 +1,7 @@
 //from gopbuf,  https://github.com/akunspy/gopbuf
 package proto
-import ( 
+
+import (
 	"fmt"
 	"unsafe"
 )
@@ -454,422 +455,428 @@ type Message interface {
 	ByteSize() int
 	IsInitialized() bool
 }
- 
+
 type QueryStruct struct {
-    cached_byte_size int
-    has_flag_0 uint32
-    pool string
-    sql string
-    args []string
+	cached_byte_size int
+	has_flag_0       uint32
+	pool             string
+	sql              string
+	args             []string
 }
 
 func NewQueryStruct() *QueryStruct {
-    p := new(QueryStruct)
-    p.pool = ""
-    p.sql = ""
-    p.args = make([]string, 0)
-    return p
+	p := new(QueryStruct)
+	p.pool = ""
+	p.sql = ""
+	p.args = make([]string, 0)
+	return p
 }
+
 //pool
 func (p *QueryStruct) Getpool() string {
-    return p.pool
+	return p.pool
 }
 func (p *QueryStruct) Setpool(v string) {
-    p.pool = v
-    if v == "" {
-        p.has_flag_0 &= 0xfffffffe
-    } else {
-        p.has_flag_0 |= 0x1
-    }
-    p.cached_byte_size = 0
+	p.pool = v
+	if v == "" {
+		p.has_flag_0 &= 0xfffffffe
+	} else {
+		p.has_flag_0 |= 0x1
+	}
+	p.cached_byte_size = 0
 }
 func (p *QueryStruct) Haspool() bool {
-    return (p.has_flag_0 & 0x1) != 0
+	return (p.has_flag_0 & 0x1) != 0
 }
 func (p *QueryStruct) Clearpool() {
-    p.pool = ""
-    p.has_flag_0 &= 0xfffffffe
-    p.cached_byte_size = 0
+	p.pool = ""
+	p.has_flag_0 &= 0xfffffffe
+	p.cached_byte_size = 0
 }
 
 //sql
 func (p *QueryStruct) Getsql() string {
-    return p.sql
+	return p.sql
 }
 func (p *QueryStruct) Setsql(v string) {
-    p.sql = v
-    if v == "" {
-        p.has_flag_0 &= 0xfffffffd
-    } else {
-        p.has_flag_0 |= 0x2
-    }
-    p.cached_byte_size = 0
+	p.sql = v
+	if v == "" {
+		p.has_flag_0 &= 0xfffffffd
+	} else {
+		p.has_flag_0 |= 0x2
+	}
+	p.cached_byte_size = 0
 }
 func (p *QueryStruct) Hassql() bool {
-    return (p.has_flag_0 & 0x2) != 0
+	return (p.has_flag_0 & 0x2) != 0
 }
 func (p *QueryStruct) Clearsql() {
-    p.sql = ""
-    p.has_flag_0 &= 0xfffffffd
-    p.cached_byte_size = 0
+	p.sql = ""
+	p.has_flag_0 &= 0xfffffffd
+	p.cached_byte_size = 0
 }
 
 //args
-func (p *QueryStruct) Sizeargs() int { return len(p.args) }
+func (p *QueryStruct) Sizeargs() int            { return len(p.args) }
 func (p *QueryStruct) Getargs(index int) string { return p.args[index] }
 func (p *QueryStruct) Addargs(v string) {
-    p.args = append(p.args, v)
-    p.cached_byte_size = 0
+	p.args = append(p.args, v)
+	p.cached_byte_size = 0
 }
-func (p *QueryStruct) Clearargs() { 
-    p.args = make([]string, 0)
-    p.cached_byte_size = 0
+func (p *QueryStruct) Clearargs() {
+	p.args = make([]string, 0)
+	p.cached_byte_size = 0
 }
+func (p *QueryStruct) Getallargs() []string { return p.args }
 
 func (p *QueryStruct) Serialize(buf []byte) (size int, err error) {
-    b := NewProtoBuffer(buf)
-    err = p.do_serialize(b)
-    return b.pos, err
+	b := NewProtoBuffer(buf)
+	err = p.do_serialize(b)
+	return b.pos, err
 }
 func (p *QueryStruct) do_serialize(b *ProtoBuffer) error {
-    buf_size := len(b.buf) - b.pos
-    byte_size := p.ByteSize()
-    if byte_size > buf_size {
-        return &ProtoError{"Serialize error, byte_size > buf_size"}
-    }
+	buf_size := len(b.buf) - b.pos
+	byte_size := p.ByteSize()
+	if byte_size > buf_size {
+		return &ProtoError{"Serialize error, byte_size > buf_size"}
+	}
 
-    list_count := 0
-    if p.Haspool() {
-        b.WriteInt32(10)
-        b.WriteString(p.pool)
-    }
-    if p.Hassql() {
-        b.WriteInt32(18)
-        b.WriteString(p.sql)
-    }
-    list_count = p.Sizeargs()
-    for i := 0; i < list_count; i++ {
-        b.WriteInt32(26)
-        b.WriteString(p.args[i])
-    }
-    return nil
+	list_count := 0
+	if p.Haspool() {
+		b.WriteInt32(10)
+		b.WriteString(p.pool)
+	}
+	if p.Hassql() {
+		b.WriteInt32(18)
+		b.WriteString(p.sql)
+	}
+	list_count = p.Sizeargs()
+	for i := 0; i < list_count; i++ {
+		b.WriteInt32(26)
+		b.WriteString(p.args[i])
+	}
+	return nil
 }
 
 func (p *QueryStruct) Parse(buf []byte, msg_size int) error {
-    b := NewProtoBuffer(buf)
-    return p.do_parse(b, msg_size)
+	b := NewProtoBuffer(buf)
+	return p.do_parse(b, msg_size)
 }
 func (p *QueryStruct) do_parse(b *ProtoBuffer, msg_size int) error {
-    msg_end := b.pos + msg_size
-    if msg_end > len(b.buf) {
-        return &ProtoError{"Parse QueryStruct error, msg size out of buffer"}
-    }
-    p.Clear()
-    for b.pos < msg_end {
-        wire_tag := b.ReadInt32()
-        switch wire_tag {
-        case 10:
-            p.Setpool(b.ReadString())
-        case 18:
-            p.Setsql(b.ReadString())
-        case 26:
-            p.Addargs(b.ReadString())
-        default: b.GetUnknowFieldValueSize(wire_tag)
-        }
-    }
+	msg_end := b.pos + msg_size
+	if msg_end > len(b.buf) {
+		return &ProtoError{"Parse QueryStruct error, msg size out of buffer"}
+	}
+	p.Clear()
+	for b.pos < msg_end {
+		wire_tag := b.ReadInt32()
+		switch wire_tag {
+		case 10:
+			p.Setpool(b.ReadString())
+		case 18:
+			p.Setsql(b.ReadString())
+		case 26:
+			p.Addargs(b.ReadString())
+		default:
+			b.GetUnknowFieldValueSize(wire_tag)
+		}
+	}
 
-    if !p.IsInitialized() {
-        return &ProtoError{"proto.QueryStruct parse error, miss required field"} 
-    }
-    return nil
+	if !p.IsInitialized() {
+		return &ProtoError{"proto.QueryStruct parse error, miss required field"}
+	}
+	return nil
 }
 
 func (p *QueryStruct) Clear() {
-    p.pool = ""
-    p.sql = ""
-    p.args = make([]string, 0)
-    p.cached_byte_size = 0
-    p.has_flag_0 = 0
+	p.pool = ""
+	p.sql = ""
+	p.args = make([]string, 0)
+	p.cached_byte_size = 0
+	p.has_flag_0 = 0
 }
 
 func (p *QueryStruct) ByteSize() int {
-    if p.cached_byte_size != 0 {
-        return p.cached_byte_size
-    }
-    list_count := 0
-    if p.Haspool() {
-        p.cached_byte_size += WriteInt32Size(10)
-        size := WriteStringSize(p.pool)
-        p.cached_byte_size += WriteInt32Size(size)
-        p.cached_byte_size += size
-    }
-    if p.Hassql() {
-        p.cached_byte_size += WriteInt32Size(18)
-        size := WriteStringSize(p.sql)
-        p.cached_byte_size += WriteInt32Size(size)
-        p.cached_byte_size += size
-    }
-    list_count = p.Sizeargs()
-    for i := 0; i < list_count; i++ {
-        p.cached_byte_size += WriteInt32Size(26)
-        size := WriteStringSize(p.args[i])
-        p.cached_byte_size += WriteInt32Size(size)
-        p.cached_byte_size += size
-    }
-    return p.cached_byte_size
+	if p.cached_byte_size != 0 {
+		return p.cached_byte_size
+	}
+	list_count := 0
+	if p.Haspool() {
+		p.cached_byte_size += WriteInt32Size(10)
+		size := WriteStringSize(p.pool)
+		p.cached_byte_size += WriteInt32Size(size)
+		p.cached_byte_size += size
+	}
+	if p.Hassql() {
+		p.cached_byte_size += WriteInt32Size(18)
+		size := WriteStringSize(p.sql)
+		p.cached_byte_size += WriteInt32Size(size)
+		p.cached_byte_size += size
+	}
+	list_count = p.Sizeargs()
+	for i := 0; i < list_count; i++ {
+		p.cached_byte_size += WriteInt32Size(26)
+		size := WriteStringSize(p.args[i])
+		p.cached_byte_size += WriteInt32Size(size)
+		p.cached_byte_size += size
+	}
+	return p.cached_byte_size
 }
 
 func (p *QueryStruct) IsInitialized() bool {
-    if (p.has_flag_0 & 0x3) != 0x3 {
-        return false
-    }
-    return true
+	if (p.has_flag_0 & 0x3) != 0x3 {
+		return false
+	}
+	return true
 }
 
 type Rows struct {
-    cached_byte_size int
-    rows []*Rows_Row
+	cached_byte_size int
+	rows             []*Rows_Row
 }
 
 func NewRows() *Rows {
-    p := new(Rows)
-    p.rows = make([]*Rows_Row, 0)
-    return p
+	p := new(Rows)
+	p.rows = make([]*Rows_Row, 0)
+	return p
 }
+
 //rows
-func (p *Rows) Sizerows() int { return len(p.rows) }
+func (p *Rows) Sizerows() int               { return len(p.rows) }
 func (p *Rows) Getrows(index int) *Rows_Row { return p.rows[index] }
 func (p *Rows) Addrows(v *Rows_Row) {
-    p.rows = append(p.rows, v)
-    p.cached_byte_size = 0
+	p.rows = append(p.rows, v)
+	p.cached_byte_size = 0
 }
-func (p *Rows) Clearrows() { 
-    p.rows = make([]*Rows_Row, 0)
-    p.cached_byte_size = 0
+func (p *Rows) Clearrows() {
+	p.rows = make([]*Rows_Row, 0)
+	p.cached_byte_size = 0
 }
 
 func (p *Rows) Serialize(buf []byte) (size int, err error) {
-    b := NewProtoBuffer(buf)
-    err = p.do_serialize(b)
-    return b.pos, err
+	b := NewProtoBuffer(buf)
+	err = p.do_serialize(b)
+	return b.pos, err
 }
 func (p *Rows) do_serialize(b *ProtoBuffer) error {
-    buf_size := len(b.buf) - b.pos
-    byte_size := p.ByteSize()
-    if byte_size > buf_size {
-        return &ProtoError{"Serialize error, byte_size > buf_size"}
-    }
+	buf_size := len(b.buf) - b.pos
+	byte_size := p.ByteSize()
+	if byte_size > buf_size {
+		return &ProtoError{"Serialize error, byte_size > buf_size"}
+	}
 
-    list_count := 0
-    list_count = p.Sizerows()
-    for i := 0; i < list_count; i++ {
-        b.WriteInt32(10)
-        size := p.rows[i].ByteSize()
-        b.WriteInt32(size)
-        p.rows[i].do_serialize(b)
-    }
-    return nil
+	list_count := 0
+	list_count = p.Sizerows()
+	for i := 0; i < list_count; i++ {
+		b.WriteInt32(10)
+		size := p.rows[i].ByteSize()
+		b.WriteInt32(size)
+		p.rows[i].do_serialize(b)
+	}
+	return nil
 }
 
 func (p *Rows) Parse(buf []byte, msg_size int) error {
-    b := NewProtoBuffer(buf)
-    return p.do_parse(b, msg_size)
+	b := NewProtoBuffer(buf)
+	return p.do_parse(b, msg_size)
 }
 func (p *Rows) do_parse(b *ProtoBuffer, msg_size int) error {
-    msg_end := b.pos + msg_size
-    if msg_end > len(b.buf) {
-        return &ProtoError{"Parse Rows error, msg size out of buffer"}
-    }
-    p.Clear()
-    for b.pos < msg_end {
-        wire_tag := b.ReadInt32()
-        switch wire_tag {
-        case 10:
-            rows_size := b.ReadInt32()
-            if rows_size > msg_end-b.pos {
-                return &ProtoError{"parse Rows_Row error"}
-            }
-            rows_tmp := NewRows_Row()
-            p.Addrows(rows_tmp)
-            if rows_size > 0 {
-                e := rows_tmp.do_parse(b, int(rows_size))
-                if e != nil {
-                    return e
-                }
-            } else {
-                return &ProtoError{"parse Rows_Row error"}
-            }
-        default: b.GetUnknowFieldValueSize(wire_tag)
-        }
-    }
+	msg_end := b.pos + msg_size
+	if msg_end > len(b.buf) {
+		return &ProtoError{"Parse Rows error, msg size out of buffer"}
+	}
+	p.Clear()
+	for b.pos < msg_end {
+		wire_tag := b.ReadInt32()
+		switch wire_tag {
+		case 10:
+			rows_size := b.ReadInt32()
+			if rows_size > msg_end-b.pos {
+				return &ProtoError{"parse Rows_Row error"}
+			}
+			rows_tmp := NewRows_Row()
+			p.Addrows(rows_tmp)
+			if rows_size > 0 {
+				e := rows_tmp.do_parse(b, int(rows_size))
+				if e != nil {
+					return e
+				}
+			} else {
+				return &ProtoError{"parse Rows_Row error"}
+			}
+		default:
+			b.GetUnknowFieldValueSize(wire_tag)
+		}
+	}
 
-    if !p.IsInitialized() {
-        return &ProtoError{"proto.Rows parse error, miss required field"} 
-    }
-    return nil
+	if !p.IsInitialized() {
+		return &ProtoError{"proto.Rows parse error, miss required field"}
+	}
+	return nil
 }
 
 func (p *Rows) Clear() {
-    p.rows = make([]*Rows_Row, 0)
-    p.cached_byte_size = 0
+	p.rows = make([]*Rows_Row, 0)
+	p.cached_byte_size = 0
 }
 
 func (p *Rows) ByteSize() int {
-    if p.cached_byte_size != 0 {
-        return p.cached_byte_size
-    }
-    list_count := 0
-    list_count = p.Sizerows()
-    for i := 0; i < list_count; i++ {
-        p.cached_byte_size += WriteInt32Size(10)
-        size := p.rows[i].ByteSize()
-        p.cached_byte_size += WriteInt32Size(size)
-        p.cached_byte_size += size
-    }
-    return p.cached_byte_size
+	if p.cached_byte_size != 0 {
+		return p.cached_byte_size
+	}
+	list_count := 0
+	list_count = p.Sizerows()
+	for i := 0; i < list_count; i++ {
+		p.cached_byte_size += WriteInt32Size(10)
+		size := p.rows[i].ByteSize()
+		p.cached_byte_size += WriteInt32Size(size)
+		p.cached_byte_size += size
+	}
+	return p.cached_byte_size
 }
 
 func (p *Rows) IsInitialized() bool {
-    return true
+	return true
 }
 
 type Rows_Row struct {
-    cached_byte_size int
-    has_flag_0 uint32
-    column string
-    value string
+	cached_byte_size int
+	has_flag_0       uint32
+	column           string
+	value            string
 }
 
 func NewRows_Row() *Rows_Row {
-    p := new(Rows_Row)
-    p.column = ""
-    p.value = ""
-    return p
+	p := new(Rows_Row)
+	p.column = ""
+	p.value = ""
+	return p
 }
+
 //column
 func (p *Rows_Row) Getcolumn() string {
-    return p.column
+	return p.column
 }
 func (p *Rows_Row) Setcolumn(v string) {
-    p.column = v
-    if v == "" {
-        p.has_flag_0 &= 0xfffffffe
-    } else {
-        p.has_flag_0 |= 0x1
-    }
-    p.cached_byte_size = 0
+	p.column = v
+	if v == "" {
+		p.has_flag_0 &= 0xfffffffe
+	} else {
+		p.has_flag_0 |= 0x1
+	}
+	p.cached_byte_size = 0
 }
 func (p *Rows_Row) Hascolumn() bool {
-    return (p.has_flag_0 & 0x1) != 0
+	return (p.has_flag_0 & 0x1) != 0
 }
 func (p *Rows_Row) Clearcolumn() {
-    p.column = ""
-    p.has_flag_0 &= 0xfffffffe
-    p.cached_byte_size = 0
+	p.column = ""
+	p.has_flag_0 &= 0xfffffffe
+	p.cached_byte_size = 0
 }
 
 //value
 func (p *Rows_Row) Getvalue() string {
-    return p.value
+	return p.value
 }
 func (p *Rows_Row) Setvalue(v string) {
-    p.value = v
-    if v == "" {
-        p.has_flag_0 &= 0xfffffffd
-    } else {
-        p.has_flag_0 |= 0x2
-    }
-    p.cached_byte_size = 0
+	p.value = v
+	if v == "" {
+		p.has_flag_0 &= 0xfffffffd
+	} else {
+		p.has_flag_0 |= 0x2
+	}
+	p.cached_byte_size = 0
 }
 func (p *Rows_Row) Hasvalue() bool {
-    return (p.has_flag_0 & 0x2) != 0
+	return (p.has_flag_0 & 0x2) != 0
 }
 func (p *Rows_Row) Clearvalue() {
-    p.value = ""
-    p.has_flag_0 &= 0xfffffffd
-    p.cached_byte_size = 0
+	p.value = ""
+	p.has_flag_0 &= 0xfffffffd
+	p.cached_byte_size = 0
 }
 
 func (p *Rows_Row) Serialize(buf []byte) (size int, err error) {
-    b := NewProtoBuffer(buf)
-    err = p.do_serialize(b)
-    return b.pos, err
+	b := NewProtoBuffer(buf)
+	err = p.do_serialize(b)
+	return b.pos, err
 }
 func (p *Rows_Row) do_serialize(b *ProtoBuffer) error {
-    buf_size := len(b.buf) - b.pos
-    byte_size := p.ByteSize()
-    if byte_size > buf_size {
-        return &ProtoError{"Serialize error, byte_size > buf_size"}
-    }
+	buf_size := len(b.buf) - b.pos
+	byte_size := p.ByteSize()
+	if byte_size > buf_size {
+		return &ProtoError{"Serialize error, byte_size > buf_size"}
+	}
 
-    if p.Hascolumn() {
-        b.WriteInt32(10)
-        b.WriteString(p.column)
-    }
-    if p.Hasvalue() {
-        b.WriteInt32(18)
-        b.WriteString(p.value)
-    }
-    return nil
+	if p.Hascolumn() {
+		b.WriteInt32(10)
+		b.WriteString(p.column)
+	}
+	if p.Hasvalue() {
+		b.WriteInt32(18)
+		b.WriteString(p.value)
+	}
+	return nil
 }
 
 func (p *Rows_Row) Parse(buf []byte, msg_size int) error {
-    b := NewProtoBuffer(buf)
-    return p.do_parse(b, msg_size)
+	b := NewProtoBuffer(buf)
+	return p.do_parse(b, msg_size)
 }
 func (p *Rows_Row) do_parse(b *ProtoBuffer, msg_size int) error {
-    msg_end := b.pos + msg_size
-    if msg_end > len(b.buf) {
-        return &ProtoError{"Parse Rows_Row error, msg size out of buffer"}
-    }
-    p.Clear()
-    for b.pos < msg_end {
-        wire_tag := b.ReadInt32()
-        switch wire_tag {
-        case 10:
-            p.Setcolumn(b.ReadString())
-        case 18:
-            p.Setvalue(b.ReadString())
-        default: b.GetUnknowFieldValueSize(wire_tag)
-        }
-    }
+	msg_end := b.pos + msg_size
+	if msg_end > len(b.buf) {
+		return &ProtoError{"Parse Rows_Row error, msg size out of buffer"}
+	}
+	p.Clear()
+	for b.pos < msg_end {
+		wire_tag := b.ReadInt32()
+		switch wire_tag {
+		case 10:
+			p.Setcolumn(b.ReadString())
+		case 18:
+			p.Setvalue(b.ReadString())
+		default:
+			b.GetUnknowFieldValueSize(wire_tag)
+		}
+	}
 
-    if !p.IsInitialized() {
-        return &ProtoError{"proto.Rows.Row parse error, miss required field"} 
-    }
-    return nil
+	if !p.IsInitialized() {
+		return &ProtoError{"proto.Rows.Row parse error, miss required field"}
+	}
+	return nil
 }
 
 func (p *Rows_Row) Clear() {
-    p.column = ""
-    p.value = ""
-    p.cached_byte_size = 0
-    p.has_flag_0 = 0
+	p.column = ""
+	p.value = ""
+	p.cached_byte_size = 0
+	p.has_flag_0 = 0
 }
 
 func (p *Rows_Row) ByteSize() int {
-    if p.cached_byte_size != 0 {
-        return p.cached_byte_size
-    }
-    if p.Hascolumn() {
-        p.cached_byte_size += WriteInt32Size(10)
-        size := WriteStringSize(p.column)
-        p.cached_byte_size += WriteInt32Size(size)
-        p.cached_byte_size += size
-    }
-    if p.Hasvalue() {
-        p.cached_byte_size += WriteInt32Size(18)
-        size := WriteStringSize(p.value)
-        p.cached_byte_size += WriteInt32Size(size)
-        p.cached_byte_size += size
-    }
-    return p.cached_byte_size
+	if p.cached_byte_size != 0 {
+		return p.cached_byte_size
+	}
+	if p.Hascolumn() {
+		p.cached_byte_size += WriteInt32Size(10)
+		size := WriteStringSize(p.column)
+		p.cached_byte_size += WriteInt32Size(size)
+		p.cached_byte_size += size
+	}
+	if p.Hasvalue() {
+		p.cached_byte_size += WriteInt32Size(18)
+		size := WriteStringSize(p.value)
+		p.cached_byte_size += WriteInt32Size(size)
+		p.cached_byte_size += size
+	}
+	return p.cached_byte_size
 }
 
 func (p *Rows_Row) IsInitialized() bool {
-    if (p.has_flag_0 & 0x3) != 0x3 {
-        return false
-    }
-    return true
+	if (p.has_flag_0 & 0x3) != 0x3 {
+		return false
+	}
+	return true
 }
-

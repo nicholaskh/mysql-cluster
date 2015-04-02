@@ -66,10 +66,14 @@ func (this *MysqlInstanceConfig) loadConfig(cf *conf.Conf) {
 	this.Port = cf.String("port", "3306")
 	this.User = cf.String("user", "root")
 	this.Pass = cf.String("pass", "")
-	this.ShardId = cf.Int("shard_id", 1)
+	this.ShardId = cf.Int("shard_id", 0)
 	this.Charset = cf.String("charset", "utf8")
 
-	this.Db = fmt.Sprintf("%s%d", this.Pool, this.ShardId)
+	if this.ShardId != 0 {
+		this.Db = fmt.Sprintf("%s%d", this.Pool, this.ShardId)
+	} else {
+		this.Db = this.Pool
+	}
 
 	if this.Pool == "" ||
 		this.Host == "" ||
