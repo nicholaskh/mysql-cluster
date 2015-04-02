@@ -4,6 +4,7 @@ import (
 	"net"
 	"time"
 
+	proto1 "github.com/golang/protobuf/proto"
 	log "github.com/nicholaskh/log4go"
 )
 
@@ -29,15 +30,13 @@ func (this *Client) Dial(addr string) error {
 }
 
 func (this *Client) Query(pool, sql string, args []string) (result string, err error) {
-	q := NewQueryStruct()
-	q.Setpool(pool)
-	q.Setsql(sql)
-	for _, arg := range args {
-		q.Addargs(arg)
-	}
+	q := &QueryStruct{Pool: &pool, Sql: &sql, Args: args}
 
-	buf := make([]byte, 1000)
-	q.Serialize(buf)
+	buf, err := proto1.Marshal(q)
+	if err != nil {
+		log.Error(err)
+		return "", err
+	}
 
 	writeSucc := false
 

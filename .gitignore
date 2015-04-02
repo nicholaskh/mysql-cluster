@@ -24,3 +24,4 @@ _testmain.go
 *.prof
 
 panic.dump
+daemon/cli/cli

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	proto1 "github.com/golang/protobuf/proto"
 	"github.com/nicholaskh/golib/server"
 	log "github.com/nicholaskh/log4go"
 	. "github.com/nicholaskh/mysql-cluster/config"
@@ -29,12 +30,12 @@ func (this *ClientHandler) OnAccept(cli *server.Client) {
 }
 
 func (this *ClientHandler) OnRead(input string) {
-	q := proto.NewQueryStruct()
-	err := q.Parse([]byte(input), len(input))
+	q := &proto.QueryStruct{}
+	err := proto1.Unmarshal([]byte(input), q)
 	if err != nil {
 		log.Error("parse query error")
 	}
-	log.Info("sql: %s\npool: %s", q.Getsql(), q.Getpool())
+	log.Info("sql: %s\npool: %s", q.GetSql(), q.GetPool())
 	rows, err := proxyGate.Execute(q)
 	if err != nil {
 		log.Error(err.Error())

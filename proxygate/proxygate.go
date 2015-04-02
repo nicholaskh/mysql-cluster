@@ -31,9 +31,9 @@ func NewProxyGate() *ProxyGate {
 }
 
 func (this *ProxyGate) Execute(q *proto.QueryStruct) (res string, err error) {
-	pool := q.Getpool()
-	sql := q.Getsql()
-	args := q.Getallargs()
+	pool := q.GetPool()
+	sql := q.GetSql()
+	args := q.GetArgs()
 	argsI := make([]interface{}, len(args))
 
 	for i, arg := range args {

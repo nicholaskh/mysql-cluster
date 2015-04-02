@@ -6,14 +6,14 @@ message QueryStruct {
 	repeated string args = 3;
 }
 
-message Rows {
+message MysqlResult {
 	message Row {
-		required string column = 1;
-		required string value = 2;
+		repeated string values = 1;
 	}
 	repeated Row rows = 1;
+	repeated string cols = 2;
 }
 
 service QueryService {
-	rpc Query (QueryStruct) returns (Rows);
+	rpc Query (QueryStruct) returns (MysqlResult);
 }
