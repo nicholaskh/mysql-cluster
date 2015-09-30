@@ -3,6 +3,7 @@ package proxygate
 import (
 	"fmt"
 
+	log "github.com/nicholaskh/log4go"
 	"github.com/nicholaskh/mysql-cluster/config"
 	"github.com/nicholaskh/mysql-cluster/proto/go"
 )
@@ -41,12 +42,16 @@ func (this *ProxyGate) Execute(q *proto.QueryStruct) (res string, err error) {
 	}
 
 	rows, err := this.pools[pool].Query(sql, argsI...)
-	defer rows.Close()
-	for rows.Next() {
-		var id string
-		var name string
-		rows.Scan(&id, &name)
-		res += fmt.Sprintf("%s %s\n", id, name)
+
+	if err != nil {
+		log.Error(err)
+	} else {
+		defer rows.Close()
+		for rows.Next() {
+			var name string
+			rows.Scan(&name)
+			res += fmt.Sprintf("%s\n", name)
+		}
 	}
 	return
 }

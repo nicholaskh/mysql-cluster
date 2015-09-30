@@ -5,6 +5,7 @@ import (
 	"time"
 
 	proto1 "github.com/golang/protobuf/proto"
+	"github.com/nicholaskh/golib/server"
 	log "github.com/nicholaskh/log4go"
 )
 
@@ -16,11 +17,13 @@ type Client struct {
 	serverAddr string
 	net.Conn
 	readTimeout time.Duration
+	proto       *server.Protocol
 }
 
 func NewClient(readTimeout time.Duration) *Client {
 	c := new(Client)
 	c.readTimeout = readTimeout
+	c.proto = server.NewProtocol()
 	return c
 }
 
@@ -38,9 +41,10 @@ func (this *Client) Query(pool, sql string, args []string) (result string, err e
 		return "", err
 	}
 
-	writeSucc := false
+	msg := this.proto.Marshal(buf)
 
-	_, err = this.Write(buf)
+	writeSucc := false
+	_, err = this.Write(msg)
 	if err == nil {
 		writeSucc = true
 	} else {
@@ -50,7 +54,7 @@ func (this *Client) Query(pool, sql string, args []string) (result string, err e
 			if err != nil {
 
 			} else {
-				_, err := this.Write(buf)
+				_, err := this.Write(msg)
 				if err == nil {
 					writeSucc = true
 					break

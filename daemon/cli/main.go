@@ -47,11 +47,15 @@ func main() {
 	server.SetupLogging("stdout", "debug", "")
 
 	c := NewClient(options.readTimeout)
+	log.Info(options.sql)
 	c.Dial(options.addr)
-	log.Info(options.args)
-	result, _ := c.Query(options.pool, options.sql, options.args)
+	result, err := c.Query(options.pool, options.sql, options.args)
 
-	log.Info(result)
+	if err != nil {
+		log.Error(err)
+	} else {
+		log.Info(result)
+	}
 
 	c.Close()
 
