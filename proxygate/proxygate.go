@@ -3,6 +3,7 @@ package proxygate
 import (
 	"fmt"
 
+	sql_ "database/sql"
 	log "github.com/nicholaskh/log4go"
 	"github.com/nicholaskh/mysql-cluster/config"
 	"github.com/nicholaskh/mysql-cluster/proto/go"
@@ -31,7 +32,14 @@ func NewProxyGate() *ProxyGate {
 	return this
 }
 
-func (this *ProxyGate) Execute(q *proto.QueryStruct) (res string, err error) {
+func (this *ProxyGate) Execute(q *proto.QueryStruct) (cols []string, rows [][]string, err error) {
+	rows = make([][]string, 0)
+	var (
+		rawRowValues []sql_.RawBytes
+		scanArgs     []interface{}
+		rowValues    []string
+	)
+
 	pool := q.GetPool()
 	sql := q.GetSql()
 	args := q.GetArgs()
@@ -41,17 +49,42 @@ func (this *ProxyGate) Execute(q *proto.QueryStruct) (res string, err error) {
 		argsI[i] = arg
 	}
 
-	rows, err := this.pools[pool].Query(sql, argsI...)
-
+	rs, err := this.pools[pool].Query(sql, argsI...)
 	if err != nil {
 		log.Error(err)
-	} else {
-		defer rows.Close()
-		for rows.Next() {
-			var name string
-			rows.Scan(&name)
-			res += fmt.Sprintf("%s\n", name)
+		return
+	}
+	defer rs.Close()
+
+	// initialize the vars only once
+	cols, err = rs.Columns()
+	if err != nil {
+		rs.Close()
+		return
+	}
+
+	rawRowValues = make([]sql_.RawBytes, len(cols))
+	scanArgs = make([]interface{}, len(cols))
+	for i, _ := range cols {
+		scanArgs[i] = &rawRowValues[i]
+	}
+
+	for rs.Next() {
+		if err := rs.Scan(scanArgs...); err != nil {
+			break
 		}
+
+		rowValues = make([]string, len(cols))
+		// TODO O(N), room for optimization, allow_nullable_columns
+		for i, raw := range rawRowValues {
+			if raw == nil {
+				rowValues[i] = "NULL"
+			} else {
+				rowValues[i] = string(raw)
+			}
+		}
+
+		rows = append(rows, rowValues)
 	}
 	return
 }

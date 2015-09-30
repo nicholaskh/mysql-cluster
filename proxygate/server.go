@@ -66,10 +66,12 @@ func (this *ClientHandler) OnRead(input []byte, client *Client) {
 		log.Error("parse query error")
 	}
 	log.Info("sql: %s\npool: %s", q.GetSql(), q.GetPool())
-	rows, err := proxyGate.Execute(q)
+	cols, rows, err := proxyGate.Execute(q)
 	if err != nil {
 		log.Error(err.Error())
 	} else {
+		log.Info(cols)
+		log.Info(rows)
 		client.WriteMsg(fmt.Sprintf("%s\n", rows))
 	}
 }
