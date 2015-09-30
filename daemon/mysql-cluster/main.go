@@ -13,14 +13,12 @@ func init() {
 		server.ShowVersionAndExit()
 	}
 
+	conf := server.LoadConfig(options.configFile)
+	config.LoadConfig(conf)
+
 }
 
 func main() {
-	s := server.NewTcpServer("mysql-cluster")
-	s.LoadConfig(options.configFile)
-
-	config.LoadConfig(s.Conf)
-
 	InitGlobal()
 
 	server.SetupLogging(options.logFile, options.logLevel, options.crashLogFile)
