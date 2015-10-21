@@ -1,5 +1,8 @@
 {
-    listen_addr: ":3253"  
+	server: {
+		listen_addr: ":3253"
+		sess_timeout: "5s"
+	}
 	
 	mysql: {
 		conn_timeout: "5s"

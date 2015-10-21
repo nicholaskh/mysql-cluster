@@ -5,15 +5,20 @@ import (
 )
 
 var Config struct {
-	ListenAddr string
-	Mysql      *MysqlConfig
+	Server *ServerConfig
+	Mysql  *MysqlConfig
 }
 
 func LoadConfig(cf *conf.Conf) {
-	Config.ListenAddr = cf.String("listen_addr", ":3253")
+	Config.Server = new(ServerConfig)
+	section, err := cf.Section("server")
+	if err != nil {
+		panic(err)
+	}
+	Config.Server.loadConfig(section)
 
 	Config.Mysql = new(MysqlConfig)
-	section, err := cf.Section("mysql")
+	section, err = cf.Section("mysql")
 	if err != nil {
 		panic(err)
 	}

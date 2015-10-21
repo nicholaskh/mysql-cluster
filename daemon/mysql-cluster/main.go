@@ -3,7 +3,8 @@ package main
 import (
 	"github.com/nicholaskh/golib/server"
 	"github.com/nicholaskh/mysql-cluster/config"
-	. "github.com/nicholaskh/mysql-cluster/proxygate"
+	"github.com/nicholaskh/mysql-cluster/core"
+	server1 "github.com/nicholaskh/mysql-cluster/server"
 )
 
 func init() {
@@ -16,14 +17,13 @@ func init() {
 	conf := server.LoadConfig(options.configFile)
 	config.LoadConfig(conf)
 
+	core.MysqlClusterInstance = core.NewMysqlCluster()
 }
 
 func main() {
-	InitGlobal()
-
 	server.SetupLogging(options.logFile, options.logLevel, options.crashLogFile)
 
-	LaunchServer()
+	server1.LaunchServer()
 
 	var ch chan int = make(chan int)
 	<-ch
