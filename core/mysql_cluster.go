@@ -12,18 +12,19 @@ import (
 var MysqlClusterInstance *MysqlCluster
 
 type MysqlCluster struct {
-	pools map[string]*mysql //[db(pool + shardId) => mysql]
+	pools    map[string]*mysql //[db(pool + shardId) => mysql]
+	selector *Selector
+	config   *config.MycConfig
 }
 
-func NewMysqlCluster() *MysqlCluster {
+func NewMysqlCluster(config *config.MycConfig) *MysqlCluster {
 	this := new(MysqlCluster)
 
 	this.pools = make(map[string]*mysql)
 
-	for pool, mysqlMap := range config.Config.Mysql.Pools {
+	for pool, mysqlMap := range config.Mysql.Pools {
 		for shardId, mysqlInstanceConfig := range mysqlMap {
-			mysql := newMysql(mysqlInstanceConfig.DSN(), config.Config.Mysql.MaxStmtCache,
-				config.Config.Mysql.MaxIdleConns, config.Config.Mysql.MaxOpenConns)
+			mysql := newMysql(mysqlInstanceConfig.DSN(), config.Mysql)
 			if shardId != 0 {
 				this.pools[fmt.Sprintf("%s%d", pool, shardId)] = mysql
 			} else {
@@ -32,7 +33,9 @@ func NewMysqlCluster() *MysqlCluster {
 			mysql.Open()
 		}
 	}
-	return this
+
+	this.selector = NewSelector(config.Sharding)
+	this.config = config
 	return this
 }
 
@@ -46,6 +49,13 @@ func (this *MysqlCluster) Query(q *proto.QueryStruct) (cols []string, rows [][]s
 
 	pool := q.GetPool()
 	sql := q.GetSql()
+
+	var shardId int
+	shardId, err = this.selector.LookupShardId(sql)
+	if err != nil {
+		return
+	}
+
 	args := q.GetArgs()
 	argsI := make([]interface{}, len(args))
 
@@ -53,7 +63,17 @@ func (this *MysqlCluster) Query(q *proto.QueryStruct) (cols []string, rows [][]s
 		argsI[i] = arg
 	}
 
-	rs, err := this.pools[pool].Query(sql, argsI...)
+	var (
+		server *mysql
+		exists bool
+	)
+	log.Info("server id: %s%d", pool, shardId)
+	if server, exists = this.pools[fmt.Sprintf("%s%d", pool, shardId)]; !exists {
+		err = ErrMysqlServerNotFound
+		return
+	}
+
+	rs, err := server.Query(sql, argsI...)
 	if err != nil {
 		log.Error(err)
 		return

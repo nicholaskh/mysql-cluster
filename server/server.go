@@ -14,10 +14,10 @@ import (
 	proto "github.com/nicholaskh/mysql-cluster/proto/go"
 )
 
-func LaunchServer() {
+func LaunchServer(config *ServerConfig) {
 	s := server.NewTcpServer("myc")
 
-	s.LaunchTcpServer(Config.Server.ListenAddr, newClientHandler(Config.Server), time.Minute*2, 200)
+	s.LaunchTcpServer(config.ListenAddr, newClientHandler(config), time.Minute*2, 200)
 }
 
 type ClientHandler struct {

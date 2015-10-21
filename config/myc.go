@@ -1,26 +1,37 @@
 package config
 
 import (
+	"fmt"
+
 	conf "github.com/nicholaskh/jsconf"
 )
 
-var Config struct {
-	Server *ServerConfig
-	Mysql  *MysqlConfig
+type MycConfig struct {
+	Server   *ServerConfig
+	Mysql    *MysqlConfig
+	Sharding map[string]*ShardingConfig
 }
 
-func LoadConfig(cf *conf.Conf) {
-	Config.Server = new(ServerConfig)
+func (this *MycConfig) LoadConfig(cf *conf.Conf) {
+	this.Server = new(ServerConfig)
 	section, err := cf.Section("server")
 	if err != nil {
 		panic(err)
 	}
-	Config.Server.loadConfig(section)
+	this.Server.loadConfig(section)
 
-	Config.Mysql = new(MysqlConfig)
+	this.Mysql = new(MysqlConfig)
 	section, err = cf.Section("mysql")
 	if err != nil {
 		panic(err)
 	}
-	Config.Mysql.loadConfig(section)
+	this.Mysql.loadConfig(section)
+
+	this.Sharding = make(map[string]*ShardingConfig)
+	for i, _ := range cf.List("sharding", nil) {
+		section, err = cf.Section(fmt.Sprintf("sharding[%d]", i))
+		shardingConfig := &ShardingConfig{}
+		shardingConfig.loadConfig(section)
+		this.Sharding[shardingConfig.TableName] = shardingConfig
+	}
 }

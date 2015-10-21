@@ -7,6 +7,8 @@ import (
 	server1 "github.com/nicholaskh/mysql-cluster/server"
 )
 
+var mycConfig *config.MycConfig
+
 func init() {
 	parseFlags()
 
@@ -15,15 +17,16 @@ func init() {
 	}
 
 	conf := server.LoadConfig(options.configFile)
-	config.LoadConfig(conf)
+	mycConfig = new(config.MycConfig)
+	mycConfig.LoadConfig(conf)
 
-	core.MysqlClusterInstance = core.NewMysqlCluster()
+	core.MysqlClusterInstance = core.NewMysqlCluster(mycConfig)
 }
 
 func main() {
 	server.SetupLogging(options.logFile, options.logLevel, options.crashLogFile)
 
-	server1.LaunchServer()
+	server1.LaunchServer(mycConfig.Server)
 
 	var ch chan int = make(chan int)
 	<-ch

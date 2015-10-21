@@ -24,7 +24,33 @@
 				port: "3306"
 				user: "root"
 				pass: ""
+			},
+			{
+				pool: "test"
+				host: "127.0.0.1"
+				user: "root"
+				pass: ""
+				shard_id: 1
 			}
 		]
 	}
+	
+	sharding: [
+		{
+			table_name: "t1"
+			pk: "id"
+			privacy:  {
+				name: "range"
+				behavior: [4, 6, 8]
+			}
+		},
+		{
+			table_name: "t2"
+			pk: "id"
+			privacy: {
+				name: "list"
+				behavior: [1995, 1996, 1997, 1998]
+			}
+		}
+	]
 }

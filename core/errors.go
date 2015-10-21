@@ -12,6 +12,13 @@ var (
 	ErrInvalidHintId       = errors.New("hintId=0?")
 	ErrEntityLocked        = errors.New("entity being locked")
 	ErrLookupTableNotFound = errors.New("mysql lookup table not configured")
+
+	ErrInvalidSql          = errors.New("invalid sql")
+	ErrMysqlServerNotFound = errors.New("mysql server not found")
+
+	ErrInvalidShardingPrivacy = errors.New("invalid sharding privacy")
+	ErrInvalidSqlType         = errors.New("invalid sql type")
+	ErrInvalidPrivacyBehavior = errors.New("invalid privacy behavior")
 )
 
 // http://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html

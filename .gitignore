@@ -25,3 +25,6 @@ _testmain.go
 
 panic.dump
 daemon/cli/cli
+
+*.swp
+*.swo

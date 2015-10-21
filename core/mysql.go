@@ -20,18 +20,22 @@ type mysql struct {
 
 	maxIdleConns int
 	maxOpenConns int
+
+	config *config.MysqlConfig
 }
 
-func newMysql(dsn string, maxStmtCached, maxIdleConns, maxOpenConns int) *mysql {
+func newMysql(dsn string, config *config.MysqlConfig) *mysql {
 	this := new(mysql)
 	this.dsn = dsn
+	this.config = config
 	this.breaker = &breaker.Consecutive{
-		FailureAllowance: config.Config.Mysql.FailureAllowance,
-		RetryTimeout:     config.Config.Mysql.RetryTimeout}
-	this.maxIdleConns = maxIdleConns
-	this.maxOpenConns = maxOpenConns
-	if maxStmtCached > 0 {
-		this.stmtsStore = cache.NewLruCache(maxStmtCached)
+		FailureAllowance: config.FailureAllowance,
+		RetryTimeout:     config.RetryTimeout,
+	}
+	this.maxIdleConns = config.MaxIdleConns
+	this.maxOpenConns = config.MaxOpenConns
+	if config.MaxStmtCache > 0 {
+		this.stmtsStore = cache.NewLruCache(config.MaxStmtCache)
 		this.stmtsStore.OnEvicted = func(key cache.Key, value interface{}) {
 			query := key.(string)
 			stmt := value.(*sql.Stmt)
