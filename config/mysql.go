@@ -19,6 +19,8 @@ type MysqlConfig struct {
 	MaxIdleConns int
 	MaxOpenConns int
 
+	ShardingStrategy string
+
 	Pools map[string]map[int]*MysqlInstanceConfig
 }
 
@@ -33,6 +35,8 @@ func (this *MysqlConfig) loadConfig(cf *conf.Conf) {
 	this.MaxIdleConns = cf.Int("max_idle_conns", 10)
 	this.MaxOpenConns = cf.Int("max_open_conns", 15)
 
+	this.ShardingStrategy = cf.String("sharding_strategy", "standard")
+
 	this.Pools = make(map[string]map[int]*MysqlInstanceConfig)
 	for i, _ := range cf.List("servers", nil) {
 		section, _ := cf.Section(fmt.Sprintf("servers[%d]", i))
@@ -40,6 +44,9 @@ func (this *MysqlConfig) loadConfig(cf *conf.Conf) {
 		mysqlInstanceConfig.loadConfig(section)
 		if _, exists := this.Pools[mysqlInstanceConfig.Pool]; !exists {
 			this.Pools[mysqlInstanceConfig.Pool] = make(map[int]*MysqlInstanceConfig)
+		}
+		if _, exists := this.Pools[mysqlInstanceConfig.Pool][mysqlInstanceConfig.ShardId]; exists {
+			panic(fmt.Sprintf("repeated shard id of pool %s in mysql servers config", mysqlInstanceConfig.Pool))
 		}
 		this.Pools[mysqlInstanceConfig.Pool][mysqlInstanceConfig.ShardId] = mysqlInstanceConfig
 	}
@@ -66,10 +73,10 @@ func (this *MysqlInstanceConfig) loadConfig(cf *conf.Conf) {
 	this.Port = cf.String("port", "3306")
 	this.User = cf.String("user", "root")
 	this.Pass = cf.String("pass", "")
-	this.ShardId = cf.Int("shard_id", 0)
+	this.ShardId = cf.Int("shard_id", -1)
 	this.Charset = cf.String("charset", "utf8")
 
-	if this.ShardId != 0 {
+	if this.ShardId >= 0 {
 		this.Db = fmt.Sprintf("%s%d", this.Pool, this.ShardId)
 	} else {
 		this.Db = this.Pool

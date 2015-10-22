@@ -8,17 +8,17 @@ var (
 	ErrNotOpen             = errors.New("mysql not open")
 	ErrServerNotFound      = errors.New("mysql server not found")
 	ErrCircuitOpen         = errors.New("mysql circuit open")
-	ErrShardLookupNotFound = errors.New("shard lookup fails")
-	ErrInvalidHintId       = errors.New("hintId=0?")
+	ErrInvalidPool         = errors.New("invalid pool")
+	ErrInvalidHintId       = errors.New("invalid hint id")
 	ErrEntityLocked        = errors.New("entity being locked")
 	ErrLookupTableNotFound = errors.New("mysql lookup table not configured")
 
-	ErrInvalidSql          = errors.New("invalid sql")
-	ErrMysqlServerNotFound = errors.New("mysql server not found")
+	ErrInvalidSql              = errors.New("invalid sql")
+	ErrInvalidShardingStrategy = errors.New("invalid sharding strategy")
+	ErrInvalidSqlType          = errors.New("invalid sql type")
+	ErrInvalidStrategyBehavior = errors.New("invalid strategy behavior")
 
-	ErrInvalidShardingPrivacy = errors.New("invalid sharding privacy")
-	ErrInvalidSqlType         = errors.New("invalid sql type")
-	ErrInvalidPrivacyBehavior = errors.New("invalid privacy behavior")
+	ErrUnknown = errors.New("uknown error")
 )
 
 // http://dev.mysql.com/doc/refman/5.5/en/error-messages-server.html

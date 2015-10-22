@@ -1,40 +1,56 @@
 package core
 
 import (
-	"fmt"
-
 	sql_ "database/sql"
+
 	log "github.com/nicholaskh/log4go"
 	"github.com/nicholaskh/mysql-cluster/config"
 	"github.com/nicholaskh/mysql-cluster/proto/go"
 )
 
+type ServerPool map[string]map[int]*mysql // [pool => [shardId => mysql]]
+
 var MysqlClusterInstance *MysqlCluster
 
 type MysqlCluster struct {
-	pools    map[string]*mysql //[db(pool + shardId) => mysql]
-	selector *Selector
-	config   *config.MycConfig
+	serverPool ServerPool
+	selector   Selector
+	config     *config.MycConfig
 }
 
 func NewMysqlCluster(config *config.MycConfig) *MysqlCluster {
 	this := new(MysqlCluster)
 
-	this.pools = make(map[string]*mysql)
+	this.serverPool = make(ServerPool)
 
 	for pool, mysqlMap := range config.Mysql.Pools {
 		for shardId, mysqlInstanceConfig := range mysqlMap {
-			mysql := newMysql(mysqlInstanceConfig.DSN(), config.Mysql)
-			if shardId != 0 {
-				this.pools[fmt.Sprintf("%s%d", pool, shardId)] = mysql
-			} else {
-				this.pools[pool] = mysql
+			server := newMysql(mysqlInstanceConfig.DSN(), config.Mysql)
+			if _, exists := this.serverPool[pool]; !exists {
+				this.serverPool[pool] = make(map[int]*mysql)
 			}
-			mysql.Open()
+			if shardId >= 0 {
+				this.serverPool[pool][shardId] = server
+			} else {
+				this.serverPool[pool][0] = server
+			}
+
+			// TODO -- open and ping for {{retries}} times
+			server.Open()
 		}
 	}
 
-	this.selector = NewSelector(config.Sharding)
+	switch config.Mysql.ShardingStrategy {
+	case "standard":
+		this.selector = newStandardSelector(config.StandardSharding, this.serverPool)
+
+	case "vbucket":
+		this.selector = newVbucketSelector(config.VbucketSharding, this.serverPool)
+
+	default:
+		panic("invalid sharding strategy")
+	}
+
 	this.config = config
 	return this
 }
@@ -48,10 +64,13 @@ func (this *MysqlCluster) Query(q *proto.QueryStruct) (cols []string, rows [][]s
 	)
 
 	pool := q.GetPool()
+	//hintId := q.GetHintId()
+	// FIXME -- delete
+	hintId := 3
 	sql := q.GetSql()
 
-	var shardId int
-	shardId, err = this.selector.LookupShardId(sql)
+	var server *mysql
+	server, err = this.selector.PickServer(pool, hintId, sql)
 	if err != nil {
 		return
 	}
@@ -61,16 +80,6 @@ func (this *MysqlCluster) Query(q *proto.QueryStruct) (cols []string, rows [][]s
 
 	for i, arg := range args {
 		argsI[i] = arg
-	}
-
-	var (
-		server *mysql
-		exists bool
-	)
-	log.Info("server id: %s%d", pool, shardId)
-	if server, exists = this.pools[fmt.Sprintf("%s%d", pool, shardId)]; !exists {
-		err = ErrMysqlServerNotFound
-		return
 	}
 
 	rs, err := server.Query(sql, argsI...)

@@ -2,8 +2,9 @@ package proto;
 
 message QueryStruct {
 	required string pool = 1;
-    	required string sql  = 2;
-	repeated string args = 3;
+	required int hintId = 2;
+    	required string sql  = 3;
+	repeated string args = 4;
 }
 
 message MysqlResult {

@@ -17,13 +17,16 @@
 		max_idle_conns: 10
 		max_open_conns: 15
 		
+		//standard | vbucket
+		sharding_strategy: "vbucket"
+		
 		servers: [
 			{
 				pool: "test"
 				host: "127.0.0.1"
-				port: "3306"
 				user: "root"
 				pass: ""
+				shard_id: 0
 			},
 			{
 				pool: "test"
@@ -31,26 +34,46 @@
 				user: "root"
 				pass: ""
 				shard_id: 1
+			},
+			{
+				pool: "test"
+				host: "127.0.0.1"
+				user: "root"
+				pass: ""
+				shard_id: 2
+			},
+			
+			// no shard id(-1) means global shard
+			{
+				pool: "test2"
+				host: "127.0.0.1"
+				port: "3306"
+				user: "root"
+				pass: ""
 			}
 		]
 	}
 	
-	sharding: [
-		{
-			table_name: "t1"
-			pk: "id"
-			privacy:  {
-				name: "range"
-				behavior: [4, 6, 8]
+	standard_sharding: {
+		servers: [
+			{
+				pool: "test"
+				strategy:  {
+					name: "range"
+					behavior: [4, 6, 8]
+				}
+			},
+			{
+				pool: "test2"
+				strategy: {
+					name: "list"
+					behavior: [1995, 1996, 1997, 1998]
+				}
 			}
-		},
-		{
-			table_name: "t2"
-			pk: "id"
-			privacy: {
-				name: "list"
-				behavior: [1995, 1996, 1997, 1998]
-			}
-		}
-	]
+		]
+	}
+	
+	vbucket_sharding: {
+		vbucket_base_number: 1024
+	}
 }

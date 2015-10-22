@@ -1,15 +1,12 @@
 package config
 
-import (
-	"fmt"
-
-	conf "github.com/nicholaskh/jsconf"
-)
+import conf "github.com/nicholaskh/jsconf"
 
 type MycConfig struct {
-	Server   *ServerConfig
-	Mysql    *MysqlConfig
-	Sharding map[string]*ShardingConfig
+	Server           *ServerConfig
+	Mysql            *MysqlConfig
+	StandardSharding *StandardShardingConfig
+	VbucketSharding  *VbucketShardingConfig
 }
 
 func (this *MycConfig) LoadConfig(cf *conf.Conf) {
@@ -27,11 +24,17 @@ func (this *MycConfig) LoadConfig(cf *conf.Conf) {
 	}
 	this.Mysql.loadConfig(section)
 
-	this.Sharding = make(map[string]*ShardingConfig)
-	for i, _ := range cf.List("sharding", nil) {
-		section, err = cf.Section(fmt.Sprintf("sharding[%d]", i))
-		shardingConfig := &ShardingConfig{}
-		shardingConfig.loadConfig(section)
-		this.Sharding[shardingConfig.TableName] = shardingConfig
+	this.StandardSharding = new(StandardShardingConfig)
+	section, err = cf.Section("standard_sharding")
+	if err != nil {
+		panic(err)
 	}
+	this.StandardSharding.loadConfig(section)
+
+	this.VbucketSharding = new(VbucketShardingConfig)
+	section, err = cf.Section("vbucket_sharding")
+	if err != nil {
+		panic(err)
+	}
+	this.VbucketSharding.loadConfig(section)
 }
